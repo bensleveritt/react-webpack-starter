@@ -1,61 +1,59 @@
-// webpack.config.js
-const webpack = require('webpack'); // eslint-disable-line no-unused-vars
+/* eslint-disable import/no-extraneous-dependencies */
+const { resolve } = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const path = require('path');
-const pkg = require('./package.json');
 
-const SRC = `${__dirname}/src`;
-const BUILD = `${__dirname}/build`;
+const SRC = resolve(__dirname, 'src');
+const BUILD = resolve(__dirname, 'build');
 
-module.exports = {
-  context: SRC,
-  entry: {
-    app: './index.js',
-    vendor: Object.keys(pkg.dependencies).filter((pkgName) => pkgName !== 'normalize.css'),
-  },
-
-  output: {
-    filename: '[name].js',
-    path: BUILD,
-  },
-
-  resolve: {
-    extensions: ['', '.jsx', '.scss', '.js', '.json', '.css']
-  },
-
-  module: {
-    loaders: [
-      {
-        test: /\.jsx?$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/,
-        query: {
-          presets: ['es2015', 'stage-0', 'react'],
+module.exports = (environmentOptions) => {
+  const env = environmentOptions || {};
+  return {
+    context: SRC,
+    entry: {
+      app: './index.jsx',
+    },
+    output: {
+      path: BUILD,
+      filename: '[name].js',
+    },
+    module: {
+      loaders: [
+        { test: /\.jsx?$/, loader: 'babel-loader', exclude: /(node_modules)/ },
+        { test: /\.scss$/,
+          loaders: [
+            'style-loader?sourceMap',
+            'css-loader?modules&importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
+            'sass-loader',
+          ],
         },
-      },
-      { test: /\.scss$/, loader: 'style!css!sass' },
-      { test: /\.jpg|png|svg$/, loader: 'url-loader?limit=8192' },
-      { test: /\.json$/, loader: 'json-loader' }
+        // { test: /\.html$/, loader: 'html-loader' },
+        // { test: /\.json$/, loader: 'json-loader' },
+        // { test: /\.ttf|woff|woff2|eot$/, loader: 'file-loader' },
+      ],
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        title: 'Alliance WG',
+        template: resolve(SRC, 'template.ejs'),
+      }),
+      new webpack.NamedModulesPlugin(),
     ],
-  },
-
-  node: {
-    fs: 'empty',
-  },
-
-  plugins: [
-    new CleanWebpackPlugin(BUILD),
-    new HtmlWebpackPlugin({
-      template: `${SRC}/template.ejs`,
-    }),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'vendor',
-    }),
-    new webpack.DefinePlugin({
-      __DEV__: JSON.stringify(JSON.parse(process.env.BUILD_DEV || 'false')),
-    }),
-  ],
-
-  devtool: 'source-map'
+    resolve: {
+      alias: {
+        components: resolve(SRC, 'components'),
+        layouts: resolve(SRC, 'layouts'),
+        theme: resolve(SRC, 'theme'),
+    //     utils: resolve(SRC, 'utils'),
+      },
+      extensions: ['.jsx', '.scss', '.js', '.json', '.css'],
+    },
+    devtool: env.prod ? 'source-map' : 'eval',
+    devServer: {
+      stats: 'errors-only',
+      host: 'localhost',
+      port: 3030,
+      historyApiFallback: true,
+    },
+  };
 };

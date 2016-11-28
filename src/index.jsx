@@ -3,16 +3,16 @@ import ReactDom from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 
+import App from 'layouts/App';
+import styles from 'theme/base.scss';
+
 import reducers from './reducers';
-import App from './components/App';
 
 const store = createStore(reducers);
 
 ReactDom.render(
-  <Provider store={ store }>
-    <div className="app">
-      <App />
-    </div>
+  <Provider store={store}>
+    <App />
   </Provider>,
-  document.querySelector('#root')
+  document.querySelector('#root'),
 );
